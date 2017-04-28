@@ -34,10 +34,10 @@ namespace OPTLab2
                 pos = 8;
                 if (id())
                 {
-                    for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
-                    if (prog[pos++]==';')
+                    Skip();
+                    if (prog[pos++] == ';')
                     {
-                        for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+                        Skip();
                         if (!prcd_list())
                             return false;
                         if (prog.Substring(pos, 3).Equals("VAR"))
@@ -48,7 +48,7 @@ namespace OPTLab2
                                 parseError = ParseError.Var;
                                 return false;
                             }
-                            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+                            Skip();
                             if (prog.Substring(pos, 5).Equals("BEGIN"))
                             {
                                 pos += 5;
@@ -57,10 +57,10 @@ namespace OPTLab2
                                     parseError = ParseError.Begin;
                                     return false;
                                 }
-                                for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+                                Skip();
                                 if (!stmt_list())
                                     return false;
-                                for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+                                Skip();
                                 if (prog.Substring(pos, 4).Equals("END."))
                                     return true;
                                 else
@@ -100,12 +100,18 @@ namespace OPTLab2
             }
         }
 
-        private bool stmt_list()
+        // Skips the whitespaces
+        private void Skip()
         {
             for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+        }
+
+        private bool stmt_list()
+        {
+            Skip();
             if (!stmt())
                 return false;
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (prog[pos] == ';')
             {
                 pos++;
@@ -116,7 +122,7 @@ namespace OPTLab2
 
         private bool stmt()
         {
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             return _if() || repeat() || read() || write() || prcd_call() || assign();
         }
 
@@ -146,7 +152,7 @@ namespace OPTLab2
                 parseError = ParseError.PrcdCall;
                 return false;
             }
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (prog[pos++] != ')')
             {
                 pos = curPos;
@@ -178,10 +184,10 @@ namespace OPTLab2
 
         private bool dec_list()
         {
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (!dec())
                 return false;
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (prog[pos++]!=';')
             {
                 parseError = ParseError.Dec;
@@ -195,10 +201,10 @@ namespace OPTLab2
         {
             if (!id_list())
                 return false;
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (prog[pos++] != ':')
                 return false;
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (!prog.Substring(pos, 7).Equals("INTEGER") && !prog.Substring(pos, 7).Equals("BOOLEAN"))
                 return false;
             pos += 7;
@@ -207,10 +213,10 @@ namespace OPTLab2
 
         private bool id_list()
         {
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (!id())
                 return false;
-            for (; prog[pos] == ' ' || prog[pos] == '\n'; pos++) ;
+            Skip();
             if (prog[pos] == ',')
             {
                 pos++;
