@@ -151,7 +151,12 @@ namespace OPTLab2
                 return false;
             }
             Skip();
-            return expr();
+            if (!expr())
+            {
+                pos = curPos;
+                return false;
+            }
+            return true;
         }
 
         private bool expr()
@@ -162,7 +167,7 @@ namespace OPTLab2
                 return false;
             }
             Skip();
-            if (prog[pos]=='+'||prog[pos]=='-')
+            if (prog[pos] == '+' || prog[pos] == '-')
             {
                 pos++;
                 Skip();
@@ -176,7 +181,7 @@ namespace OPTLab2
             if (!factor())
                 return false;
             Skip();
-            if (prog[pos]=='*'||prog[pos]=='/')
+            if (prog[pos] == '*' || prog[pos] == '/')
             {
                 pos++;
                 Skip();
@@ -187,7 +192,26 @@ namespace OPTLab2
 
         private bool factor()
         {
-            return true;
+            if (prog[pos] == '-' || prog[pos] == '+')
+                pos++;
+            return rfactor();
+        }
+
+        private bool rfactor()
+        {
+            if (prog[pos] == '(')
+            {
+                pos += 1;
+                if (!expr())
+                    return false;
+                pos += 1;
+                return true;
+            }
+            if (digit(prog[pos]))
+                return integer();
+            if (letter(prog[pos]))
+                return id();
+            return false;
         }
 
         private bool prcd_call()
@@ -385,7 +409,14 @@ namespace OPTLab2
                 return false;
             pos = curPos;
             return true;
+        }
 
+        private bool integer()
+        {
+            int curPos = pos;
+            for (; digit(prog[curPos]); curPos++) ;
+            pos = curPos;
+            return true;
         }
 
         private bool digit(char v)
