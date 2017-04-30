@@ -10,7 +10,7 @@ namespace OPTLab2
     {
         public enum ParseError
         {
-            NoError, Program, Var, Begin, End, Dec, PrcdCall
+            NoError, Program, Var, Begin, End, Dec, PrcdCall, Read, Write, UEOF, Assign, Expr
         }
 
         string prog;
@@ -24,7 +24,15 @@ namespace OPTLab2
 
         public bool Parse()
         {
-            return program();
+            try
+            {
+                return program();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                parseError = ParseError.UEOF;
+                return false;
+            }
         }
 
         bool program()
@@ -128,7 +136,58 @@ namespace OPTLab2
 
         private bool assign()
         {
-            return false;
+            int curPos = pos;
+            if (!id())
+            {
+                pos = curPos;
+                parseError = ParseError.Assign;
+                return false;
+            }
+            Skip();
+            if (!(prog[pos++] == ':' && prog[pos++] == '='))
+            {
+                pos = curPos;
+                parseError = ParseError.Assign;
+                return false;
+            }
+            Skip();
+            return expr();
+        }
+
+        private bool expr()
+        {
+            if (!term())
+            {
+                parseError = ParseError.Expr;
+                return false;
+            }
+            Skip();
+            if (prog[pos]=='+'||prog[pos]=='-')
+            {
+                pos++;
+                Skip();
+                return expr();
+            }
+            return true;
+        }
+
+        private bool term()
+        {
+            if (!factor())
+                return false;
+            Skip();
+            if (prog[pos]=='*'||prog[pos]=='/')
+            {
+                pos++;
+                Skip();
+                return term();
+            }
+            return true;
+        }
+
+        private bool factor()
+        {
+            return true;
         }
 
         private bool prcd_call()
@@ -164,12 +223,82 @@ namespace OPTLab2
 
         private bool read()
         {
-            return false;
+            int curPos = pos;
+            try
+            {
+                if (!prog.Substring(pos, 4).Equals("READ"))
+                {
+                    pos = curPos;
+                    parseError = ParseError.Read;
+                    return false;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                parseError = ParseError.Read;
+                throw;
+            }
+            pos += 4;
+            if (prog[pos++] != '(')
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            if (!id_list())
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            Skip();
+            if (prog[pos++] != ')')
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            return true;
         }
 
         private bool write()
         {
-            return false;
+            int curPos = pos;
+            try
+            {
+                if (!prog.Substring(pos, 5).Equals("WRITE"))
+                {
+                    pos = curPos;
+                    parseError = ParseError.Write;
+                    return false;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                parseError = ParseError.Write;
+                return false;
+            }
+            pos += 5;
+            if (prog[pos++] != '(')
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            if (!id_list())
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            Skip();
+            if (prog[pos++] != ')')
+            {
+                pos = curPos;
+                parseError = ParseError.PrcdCall;
+                return false;
+            }
+            return true;
         }
 
         private bool repeat()
