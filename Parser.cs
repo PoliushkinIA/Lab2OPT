@@ -10,11 +10,11 @@ namespace OPTLab2
     {
         public enum ParseError
         {
-            NoError, Program, Var, Begin, End, Dec, PrcdCall, Read, Write, UEOF, Assign, Expr, If, Repeat, Cond
+            NoError, Program, Var, Begin, End, Dec, PrcdCall, Read, Write, UEOF, Assign, Expr, If, Repeat, Cond, Procedure
         }
 
         string prog;
-        int pos;
+        int pos = 0;
         public ParseError parseError;
 
         public Parser(string program)
@@ -37,9 +37,9 @@ namespace OPTLab2
 
         bool program()
         {
-            if (prog.Substring(0, 8).Equals("PROGRAM "))
+            if (prog.Substring(pos, 8).Equals("PROGRAM "))
             {
-                pos = 8;
+                pos += 8;
                 if (id())
                 {
                     Skip();
@@ -48,6 +48,7 @@ namespace OPTLab2
                         Skip();
                         if (!prcd_list())
                             return false;
+                        Skip();
                         if (prog.Substring(pos, 3).Equals("VAR"))
                         {
                             pos += 3;
@@ -584,28 +585,42 @@ namespace OPTLab2
         private bool dec_list()
         {
             Skip();
+            if (prog.Substring(pos, 5).Equals("BEGIN"))
+                return true;
             if (!dec())
                 return false;
             Skip();
-            if (prog[pos++]!=';')
+            if (prog[pos]==';')
             {
-                parseError = ParseError.Dec;
-                return false;
+                pos++;
+                return dec_list();
             }
-            dec_list();
             return true;
         }
 
         private bool dec()
         {
+            int curPos = pos;
             if (!id_list())
+            {
+                parseError = ParseError.Dec;
+                pos = curPos;
                 return false;
+            }
             Skip();
             if (prog[pos++] != ':')
+            {
+                parseError = ParseError.Dec;
+                pos = curPos;
                 return false;
+            }
             Skip();
             if (!prog.Substring(pos, 7).Equals("INTEGER") && !prog.Substring(pos, 7).Equals("BOOLEAN"))
+            {
+                parseError = ParseError.Dec;
+                pos = curPos;
                 return false;
+            }
             pos += 7;
             return true;
         }
@@ -626,7 +641,106 @@ namespace OPTLab2
 
         private bool prcd_list()
         {
-            return true;
+            int curPos = pos;
+            Skip();
+            if (!procedure())
+            {
+                pos = curPos;
+                return true;
+            }
+            Skip();
+            if (prog[pos++] != ';')
+            {
+                parseError = ParseError.Procedure;
+                return false;
+            }
+            return prcd_list();
+        }
+
+        private bool procedure()
+        {
+            if (prog.Substring(pos, 10).Equals("PROCEDURE "))
+            {
+                pos += 10;
+                if (id())
+                {
+                    Skip();
+                    if (prog[pos++] != '(')
+                        return false;
+                    Skip();
+                    if (!dec_list())
+                        return false;
+                    Skip();
+                    if (prog[pos++] != ')')
+                        return false;
+                    Skip();
+                    if (prog[pos++] == ';')
+                    {
+                        Skip();
+                        if (!prcd_list())
+                            return false;
+                        Skip();
+                        if (prog.Substring(pos, 3).Equals("VAR"))
+                        {
+                            pos += 3;
+                            if (!dec_list())
+                            {
+                                parseError = ParseError.Var;
+                                return false;
+                            }
+                            Skip();
+                            if (prog.Substring(pos, 5).Equals("BEGIN"))
+                            {
+                                pos += 5;
+                                if (prog[pos] != ' ' && prog[pos] != '\n')
+                                {
+                                    parseError = ParseError.Begin;
+                                    return false;
+                                }
+                                Skip();
+                                if (!stmt_list())
+                                    return false;
+                                Skip();
+                                if (prog.Substring(pos, 3).Equals("END"))
+                                {
+                                    pos += 3;
+                                    return true;
+                                }
+                                else
+                                {
+                                    parseError = ParseError.End;
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                parseError = ParseError.Begin;
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            parseError = ParseError.Var;
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        parseError = ParseError.Procedure;
+                        return false;
+                    }
+                }
+                else
+                {
+                    parseError = ParseError.Procedure;
+                    return false;
+                }
+            }
+            else
+            {
+                parseError = ParseError.Procedure;
+                return false;
+            }
         }
 
         private bool id()
