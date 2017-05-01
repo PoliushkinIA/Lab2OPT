@@ -61,7 +61,63 @@ namespace OPTLab2
         {
             Parser parser = new Parser(richTextBox1.Text);
             if (parser.Parse())
-                MessageBox.Show("The program is correct", "Parser output", MessageBoxButtons.OK);
+                MessageBox.Show("The program is correct", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            else
+            {
+                switch (parser.parseError)
+                {
+                    case Parser.ParseError.NoError:
+                        MessageBox.Show("Undentified error", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Program:
+                        MessageBox.Show("Error in program statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Var:
+                        MessageBox.Show("Error in var statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Begin:
+                        MessageBox.Show("Error: BEGIN expected", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.End:
+                        MessageBox.Show("Error: END expected", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Dec:
+                        MessageBox.Show("Error in variable declaration", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.PrcdCall:
+                        MessageBox.Show("Error in procedure call", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Read:
+                        MessageBox.Show("Error in READ statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Write:
+                        MessageBox.Show("Error in WRITE statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.UEOF:
+                        MessageBox.Show("Error: unexpected end of file", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Assign:
+                        MessageBox.Show("Error in assign statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Expr:
+                        MessageBox.Show("Error in arithmetic expression", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.If:
+                        MessageBox.Show("Error in IF statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Repeat:
+                        MessageBox.Show("Error in REPEAT statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Cond:
+                        MessageBox.Show("Error in boolean expression", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case Parser.ParseError.Procedure:
+                        MessageBox.Show("Error in procedure statement", "Parser output", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         private void abotToolStripMenuItem_Click(object sender, EventArgs e)
