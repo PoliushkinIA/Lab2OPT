@@ -10,7 +10,7 @@ namespace OPTLab2
     {
         public enum ParseError
         {
-            NoError, Program, Var, Begin, End, Dec, PrcdCall, Read, Write, UEOF, Assign, Expr
+            NoError, Program, Var, Begin, End, Dec, PrcdCall, Read, Write, UEOF, Assign, Expr, If, Repeat, Cond
         }
 
         string prog;
@@ -204,7 +204,9 @@ namespace OPTLab2
                 pos += 1;
                 if (!expr())
                     return false;
-                pos += 1;
+                Skip();
+                if (prog[pos++] != ')')
+                    return false;
                 return true;
             }
             if (digit(prog[pos]))
@@ -327,11 +329,255 @@ namespace OPTLab2
 
         private bool repeat()
         {
-            return false;
+            try
+            {
+                int curPos = pos;
+                if (!prog.Substring(pos, 6).Equals("REPEAT"))
+                {
+                    pos = curPos;
+                    parseError = ParseError.Repeat;
+                    return false;
+                }
+                pos += 6;
+                Skip();
+                if (!stmt_list())
+                {
+                    pos = curPos;
+                    parseError = ParseError.Repeat;
+                    return false;
+                }
+                Skip();
+                if (!prog.Substring(pos, 5).Equals("UNTIL"))
+                {
+                    pos = curPos;
+                    parseError = ParseError.Repeat;
+                    return false;
+                }
+                pos += 5;
+                Skip();
+                if (!cond())
+                {
+                    pos = curPos;
+                    return false;
+                }
+                return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                parseError = ParseError.Repeat;
+                return false;
+            }
         }
 
         private bool _if()
         {
+            int curPos = pos;
+            Skip();
+            if (!prog.Substring(pos, 2).Equals("IF"))
+            {
+                pos = curPos;
+                parseError = ParseError.If;
+                return false;
+            }
+            pos += 2;
+            Skip();
+            if (!cond())
+            {
+                pos = curPos;
+                return false;
+            }
+            Skip();
+            if (!prog.Substring(pos, 4).Equals("THEN"))
+            {
+                pos = curPos;
+                parseError = ParseError.If;
+                return false;
+            }
+            pos += 4;
+            Skip();
+            if (!body())
+            {
+                pos = curPos;
+                parseError = ParseError.If;
+                return false;
+            }
+            Skip();
+            if (prog.Substring(pos, 4).Equals("ELSE"))
+            {
+                pos += 4;
+                if (!body())
+                {
+                    pos = curPos;
+                    parseError = ParseError.If;
+                    return false;
+                }
+            }
+            Skip();
+            return true;
+        }
+
+        private bool body()
+        {
+            try
+            {
+                if (prog.Substring(pos, 5).Equals("BEGIN"))
+                {
+                    pos += 5;
+                    Skip();
+                    if (!stmt_list())
+                        return false;
+                    Skip();
+                    if (!prog.Substring(pos, 3).Equals("END"))
+                        return false;
+                    pos += 3;
+                    Skip();
+                    return true;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
+            return stmt();
+        }
+
+        private bool cond()
+        {
+            try
+            {
+                int curPos = pos;
+                if (expr())
+                {
+                    Skip();
+                    if (cmp_op())
+                    {
+                        Skip();
+                        if (!expr())
+                        {
+                            pos = curPos;
+                            parseError = ParseError.Cond;
+                            return false;
+                        }
+                        Skip();
+                        return true;
+                    }
+                }
+                pos = curPos;
+                if (prog[pos]=='(')
+                {
+                    pos++;
+                    if (!cond())
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (prog[pos++] != ')')
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (!bool_op())
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (prog[pos++] != '(')
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (!cond())
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (prog[pos++] != ')')
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    return true;
+                }
+                if (prog.Substring(pos, 3).Equals("NOT"))
+                {
+                    pos += 3;
+                    Skip();
+                    if (prog[pos++] != '(')
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (!cond())
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    if (prog[pos++] != ')')
+                    {
+                        pos = curPos;
+                        parseError = ParseError.Cond;
+                        return false;
+                    }
+                    Skip();
+                    return true;
+                }
+                if (!id())
+                {
+                    pos = curPos;
+                    parseError = ParseError.Cond;
+                    return false;
+                }
+                return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                parseError = ParseError.Cond;
+                return false;
+            }
+        }
+
+        private bool bool_op()
+        {
+            if (prog.Substring(pos, 2).Equals("OR"))
+            {
+                pos += 2;
+                return true;
+            }
+            if (prog.Substring(pos, 3).Equals("AND"))
+            {
+                pos += 3;
+                return true;
+            }
+            return false;
+        }
+
+        private bool cmp_op()
+        {
+            if (prog.Substring(pos, 2).Equals("<=") || prog.Substring(pos, 2).Equals(">=") || prog.Substring(pos, 2).Equals("<>"))
+            {
+                pos += 2;
+                return true;
+            }
+            if ("=><".Contains(prog[pos]))
+            {
+                pos++;
+                return true;
+            }
             return false;
         }
 
