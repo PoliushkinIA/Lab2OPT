@@ -15,11 +15,31 @@ namespace OPTLab2
 
         string prog;
         int pos = 0;
+        int linePos = -1;
         public ParseError parseError;
 
         public Parser(string program)
         {
             prog = program;
+        }
+        
+        public int GetLine()
+        {
+            int line = 0;
+            for (int i = 0; i <= pos; i++, linePos++)
+            {
+                if (prog[i] == '\n')
+                {
+                    line += 1;
+                    linePos = 0;
+                }
+            }
+            return line;
+        }
+
+        public int GetPlace()
+        {
+            return pos - linePos + 1;
         }
 
         public bool Parse()
@@ -74,7 +94,10 @@ namespace OPTLab2
                                     return true;
                                 else
                                 {
-                                    parseError = ParseError.End;
+                                    if (parseError == ParseError.NoError)
+                                    {
+                                        parseError = ParseError.End; 
+                                    }
                                     return false;
                                 }
                             }
@@ -117,6 +140,7 @@ namespace OPTLab2
 
         private bool stmt_list()
         {
+            parseError = ParseError.NoError;
             Skip();
             if (!stmt())
                 return false;
@@ -141,14 +165,20 @@ namespace OPTLab2
             if (!id())
             {
                 pos = curPos;
-                parseError = ParseError.Assign;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Assign; 
+                }
                 return false;
             }
             Skip();
             if (!(prog[pos++] == ':' && prog[pos++] == '='))
             {
                 pos = curPos;
-                parseError = ParseError.Assign;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Assign; 
+                }
                 return false;
             }
             Skip();
@@ -164,7 +194,10 @@ namespace OPTLab2
         {
             if (!term())
             {
-                parseError = ParseError.Expr;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Expr; 
+                }
                 return false;
             }
             Skip();
@@ -223,26 +256,38 @@ namespace OPTLab2
             if (!id())
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.PrcdCall; 
+                }
                 return false;
             }
             if (prog[pos++] != '(')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.PrcdCall; 
+                }
                 return false;
             }
             if (!id_list())
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.PrcdCall; 
+                }
                 return false;
             }
             Skip();
             if (prog[pos++] != ')')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.PrcdCall; 
+                }
                 return false;
             }
             return true;
@@ -256,33 +301,48 @@ namespace OPTLab2
                 if (!prog.Substring(pos, 4).Equals("READ"))
                 {
                     pos = curPos;
-                    parseError = ParseError.Read;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.Read; 
+                    }
                     return false;
                 }
             }
             catch (ArgumentOutOfRangeException)
             {
-                parseError = ParseError.Read;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Read; 
+                }
                 throw;
             }
             pos += 4;
             if (prog[pos++] != '(')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Read; 
+                }
                 return false;
             }
             if (!id_list())
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Read; 
+                }
                 return false;
             }
             Skip();
             if (prog[pos++] != ')')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Read; 
+                }
                 return false;
             }
             return true;
@@ -296,33 +356,48 @@ namespace OPTLab2
                 if (!prog.Substring(pos, 5).Equals("WRITE"))
                 {
                     pos = curPos;
-                    parseError = ParseError.Write;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.Write; 
+                    }
                     return false;
                 }
             }
             catch (ArgumentOutOfRangeException)
             {
-                parseError = ParseError.Write;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Write; 
+                }
                 return false;
             }
             pos += 5;
             if (prog[pos++] != '(')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Write; 
+                }
                 return false;
             }
             if (!id_list())
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Write; 
+                }
                 return false;
             }
             Skip();
             if (prog[pos++] != ')')
             {
                 pos = curPos;
-                parseError = ParseError.PrcdCall;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Write; 
+                }
                 return false;
             }
             return true;
@@ -336,7 +411,10 @@ namespace OPTLab2
                 if (!prog.Substring(pos, 6).Equals("REPEAT"))
                 {
                     pos = curPos;
-                    parseError = ParseError.Repeat;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.Repeat; 
+                    }
                     return false;
                 }
                 pos += 6;
@@ -344,14 +422,20 @@ namespace OPTLab2
                 if (!stmt_list())
                 {
                     pos = curPos;
-                    parseError = ParseError.Repeat;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.Repeat; 
+                    }
                     return false;
                 }
                 Skip();
                 if (!prog.Substring(pos, 5).Equals("UNTIL"))
                 {
                     pos = curPos;
-                    parseError = ParseError.Repeat;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.Repeat; 
+                    }
                     return false;
                 }
                 pos += 5;
@@ -365,7 +449,10 @@ namespace OPTLab2
             }
             catch (ArgumentOutOfRangeException)
             {
-                parseError = ParseError.Repeat;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.Repeat; 
+                }
                 return false;
             }
         }
@@ -377,7 +464,10 @@ namespace OPTLab2
             if (!prog.Substring(pos, 2).Equals("IF"))
             {
                 pos = curPos;
-                parseError = ParseError.If;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.If; 
+                }
                 return false;
             }
             pos += 2;
@@ -391,7 +481,10 @@ namespace OPTLab2
             if (!prog.Substring(pos, 4).Equals("THEN"))
             {
                 pos = curPos;
-                parseError = ParseError.If;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.If; 
+                }
                 return false;
             }
             pos += 4;
@@ -399,7 +492,10 @@ namespace OPTLab2
             if (!body())
             {
                 pos = curPos;
-                parseError = ParseError.If;
+                if (parseError == ParseError.NoError)
+                {
+                    parseError = ParseError.If; 
+                }
                 return false;
             }
             Skip();
@@ -409,7 +505,10 @@ namespace OPTLab2
                 if (!body())
                 {
                     pos = curPos;
-                    parseError = ParseError.If;
+                    if (parseError == ParseError.NoError)
+                    {
+                        parseError = ParseError.If; 
+                    }
                     return false;
                 }
             }
