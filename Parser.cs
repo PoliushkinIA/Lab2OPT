@@ -25,7 +25,7 @@ namespace OPTLab2
         
         public int GetLine()
         {
-            int line = 0;
+            int line = 1;
             for (int i = 0; i <= pos; i++, linePos++)
             {
                 if (prog[i] == '\n')
@@ -39,7 +39,7 @@ namespace OPTLab2
 
         public int GetPlace()
         {
-            return pos - linePos + 1;
+            return linePos;
         }
 
         public bool Parse()
