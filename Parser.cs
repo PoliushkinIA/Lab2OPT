@@ -684,15 +684,13 @@ namespace OPTLab2
         private bool dec_list()
         {
             Skip();
-            if (prog.Substring(pos, 5).Equals("BEGIN"))
-                return true;
             if (!dec())
                 return false;
             Skip();
             if (prog[pos]==';')
             {
                 pos++;
-                return dec_list();
+                dec_list();
             }
             return true;
         }
